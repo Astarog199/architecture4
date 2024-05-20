@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import ru.gb.android.workshop4.marketsample.databinding.FragmentProductListBinding
+import ru.gb.android.workshop4.marketsample.databinding.ItemProductBinding
 import ru.gb.android.workshop4.presentation.product.adapter.ProductsAdapter
 
 @AndroidEntryPoint
@@ -51,12 +52,15 @@ class ProductListFragment : Fragment() {
         viewModel.requestProducts()
     }
 
+
+
     private fun subscribeUI() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.state.collect { state ->
                         when {
+
                             state.isLoading -> showLoading()
                             state.hasError -> {
                                 Toast.makeText(

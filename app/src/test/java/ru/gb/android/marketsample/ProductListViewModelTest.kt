@@ -12,8 +12,11 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.argThat
 import org.mockito.kotlin.whenever
+import ru.gb.android.workshop4.domain.product.AddFavoriteUseCase
+import ru.gb.android.workshop4.domain.product.ConsumeFavorietesUseCase
 import ru.gb.android.workshop4.domain.product.ConsumeProductsUseCase
 import ru.gb.android.workshop4.domain.product.Product
+import ru.gb.android.workshop4.domain.product.RemoveFavoriteUseCase
 import ru.gb.android.workshop4.marketsample.R
 import ru.gb.android.workshop4.presentation.product.ProductListViewModel
 import ru.gb.android.workshop4.presentation.product.ProductState
@@ -30,6 +33,15 @@ class ProductListViewModelTest {
     @Mock
     lateinit var productStateFactory: ProductStateFactory
 
+    @Mock
+    lateinit var consumeFavorietesUseCase: ConsumeFavorietesUseCase
+
+    @Mock
+    lateinit var addFavoriteUseCase: AddFavoriteUseCase
+
+    @Mock
+    lateinit var removeFavoriteUseCase: RemoveFavoriteUseCase
+
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -38,6 +50,9 @@ class ProductListViewModelTest {
         sut = ProductListViewModel(
             consumeProductsUseCase = consumeProductsUseCase,
             productStateFactory = productStateFactory,
+           consumeFavorietesUseCase = consumeFavorietesUseCase,
+            addFavoriteUseCase = addFavoriteUseCase,
+            removeFavoriteUseCase = removeFavoriteUseCase
         )
     }
 
