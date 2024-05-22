@@ -8,7 +8,7 @@ import javax.inject.Inject
 class RemoveFavoriteUseCase @Inject constructor(
     private val favoritesRepository: FavoritesRepository
 ) {
-    suspend fun removeProduct(product: ProductState){
+    suspend fun removeProduct(product: Favorite){
         val favorite = FavoriteEntity(id = product.id)
         favoritesRepository.removeFromFavorites(favorite)
     }

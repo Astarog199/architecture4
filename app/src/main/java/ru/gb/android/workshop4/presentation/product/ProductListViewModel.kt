@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import ru.gb.android.workshop4.domain.product.AddFavoriteUseCase
 import ru.gb.android.workshop4.domain.product.ConsumeFavorietesUseCase
 import ru.gb.android.workshop4.domain.product.ConsumeProductsUseCase
@@ -29,11 +30,12 @@ class ProductListViewModel @Inject constructor(
     private val productStateFactory: ProductStateFactory,
     private val consumeFavorietesUseCase: ConsumeFavorietesUseCase,
     private val addFavoriteUseCase: AddFavoriteUseCase,
-    private val removeFavoriteUseCase: RemoveFavoriteUseCase
+    private val removeFavoriteUseCase: RemoveFavoriteUseCase,
+    private val favoriteStateFactory: FavoriteStateFactory
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(ProductsScreenState())
-    val state: StateFlow<ProductsScreenState> = _state.asStateFlow()
+    private var _state = MutableStateFlow(ProductsScreenState())
+    var state: StateFlow<ProductsScreenState> = _state.asStateFlow()
 
     fun requestProducts() {
         consumeProductsUseCase()
@@ -71,28 +73,42 @@ class ProductListViewModel @Inject constructor(
     }
 
     fun addToFavorites(favoriteId: String) {
-        _state.value.productListState.map { value ->
-                if (value.id == favoriteId) {
-                    loop(value)
-                    value.isFavorite = true
-                    addFavoriteUseCase.addProduct(value)
-                    loop(value)
-                }
+        consumeFavorietesUseCase()
+            .onStart {
+                addFavoriteUseCase.addProduct(Favorite(favoriteId))
             }
-        }
 
-    fun removeFromFavorites(favoriteId: String) {
-        _state.map { value ->
-            value.productListState.map { value ->
-                if (value.id == favoriteId) {
-                    value.isFavorite = false
-                    removeFavoriteUseCase.removeProduct(value)
+            .onEach { result ->
+                _state.update {
+                    it.copy(productListState = it.productListState.map { product ->
+                        if (product.id == favoriteId) {
+                            product.copy(isFavorite = true)
+                        } else {
+                            product
+                        }
+                    })
                 }
             }
-        }
+            .launchIn(viewModelScope)
     }
 
-    fun loop(productState: ProductState) {
-        Log.d("ProductListViewModel", "$productState")
+    fun removeFromFavorites(favoriteId: String) {
+        consumeFavorietesUseCase()
+            .onStart {
+                removeFavoriteUseCase.removeProduct(Favorite(favoriteId))
+            }
+
+            .onEach { result ->
+                _state.update {
+                    it.copy(productListState = it.productListState.map { product ->
+                        if (product.id == favoriteId) {
+                            product.copy(isFavorite = false)
+                        } else {
+                            product
+                        }
+                    })
+                }
+            }
+            .launchIn(viewModelScope)
     }
 }

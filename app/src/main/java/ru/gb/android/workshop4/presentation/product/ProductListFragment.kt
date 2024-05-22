@@ -60,7 +60,6 @@ class ProductListFragment : Fragment() {
                 launch {
                     viewModel.state.collect { state ->
                         when {
-
                             state.isLoading -> showLoading()
                             state.hasError -> {
                                 Toast.makeText(
@@ -71,7 +70,6 @@ class ProductListFragment : Fragment() {
 
                                 viewModel.errorHasShown()
                             }
-
                             else -> showProductList(productListState = state.productListState)
                         }
                     }
