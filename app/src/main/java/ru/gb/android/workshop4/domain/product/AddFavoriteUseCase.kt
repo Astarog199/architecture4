@@ -13,13 +13,5 @@ class AddFavoriteUseCase @Inject constructor(
     suspend fun addProduct (productState: Favorite){
          val favorite = FavoriteEntity(id = productState.id)
         favoritesRepository.addToFavorites(favorite = favorite)
-        loop()
-    }
-
-    fun loop() {
-         favoritesRepository.consumeFavorites().map { it->
-             for (i in it)
-             Log.d("AddFavoriteUseCase", i.id)
-         }
     }
 }

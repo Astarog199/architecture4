@@ -25,8 +25,11 @@ import ru.gb.android.workshop4.data.product.ProductEntity
 import ru.gb.android.workshop4.data.product.ProductLocalDataSource
 import ru.gb.android.workshop4.data.product.ProductRemoteDataSource
 import ru.gb.android.workshop4.data.product.ProductRepository
+import ru.gb.android.workshop4.domain.product.AddFavoriteUseCase
+import ru.gb.android.workshop4.domain.product.ConsumeFavorietesUseCase
 import ru.gb.android.workshop4.domain.product.ConsumeProductsUseCase
 import ru.gb.android.workshop4.domain.product.ProductDomainMapper
+import ru.gb.android.workshop4.domain.product.RemoveFavoriteUseCase
 import ru.gb.android.workshop4.presentation.common.PriceFormatterImpl
 import ru.gb.android.workshop4.presentation.product.ProductListViewModel
 import ru.gb.android.workshop4.presentation.product.ProductState
@@ -49,8 +52,19 @@ class IntegrationTest {
     @Mock
     lateinit var productRemoteDataSource: ProductRemoteDataSource
 
+    @Mock
+    lateinit var consumeFavorietesUseCase: ConsumeFavorietesUseCase
+
+    @Mock
+    lateinit var addFavoriteUseCase: AddFavoriteUseCase
+
+    @Mock
+    lateinit var removeFavoriteUseCase: RemoveFavoriteUseCase
+
+
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(StandardTestDispatcher())
+
 
     private val ioDispatcher = StandardTestDispatcher()
 
@@ -66,11 +80,51 @@ class IntegrationTest {
             productRepository = productRepository,
             productDomainMapper = ProductDomainMapper(),
         )
+
+
         sut = ProductListViewModel(
             consumeProductsUseCase = consumeProductsUseCase,
             productStateFactory = ProductStateFactory(priceFormatter = PriceFormatterImpl()),
+            consumeFavorietesUseCase = consumeFavorietesUseCase,
+            addFavoriteUseCase = addFavoriteUseCase,
+            removeFavoriteUseCase = removeFavoriteUseCase,
         )
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `add to favorites should update the list and change favorite status`() = runTest(UnconfinedTestDispatcher()) {
+        productsFromServer(create(id = "0",  name = "товар1"), create(id = "1", name = "товар2"))
+
+        val initialState =  ProductsScreenState(
+            productListState = listOf(
+                ProductState(id = "0", isFavorite = true),
+                ProductState(id = "1", isFavorite = false)
+            )
+        )
+
+        sut.requestProducts()
+        ioDispatcher.scheduler.runCurrent()
+        mainDispatcherRule.testDispatcher.scheduler.runCurrent()
+        sut.addToFavorites("0")
+
+        assertEquals(sut.state.value.productListState[0].isFavorite, true)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `removeFromFavorites show true`() = runTest(UnconfinedTestDispatcher()) {
+        productsFromServer(create(id = "0",  name = "товар1"), create(id = "1", name = "товар2"))
+
+        sut.requestProducts()
+        ioDispatcher.scheduler.runCurrent()
+        mainDispatcherRule.testDispatcher.scheduler.runCurrent()
+        sut.state.value.productListState[0].isFavorite = true
+        sut.removeFromFavorites("0")
+
+        assertEquals(sut.state.value.productListState[0].isFavorite, false)
+    }
+
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
@@ -82,8 +136,8 @@ class IntegrationTest {
         val expectedDataState = ProductsScreenState(
             isLoading = false,
             productListState = listOf(
-                ProductState(id = "1", price = "100.00"),
-                ProductState(id = "2", price = "200.00"),
+                ProductState(id = "1", price = "100,00"),
+                ProductState(id = "2", price = "200,00"),
             )
         )
         val (job, results) = collectResults()

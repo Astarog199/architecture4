@@ -31,7 +31,6 @@ class ProductListViewModel @Inject constructor(
     private val consumeFavorietesUseCase: ConsumeFavorietesUseCase,
     private val addFavoriteUseCase: AddFavoriteUseCase,
     private val removeFavoriteUseCase: RemoveFavoriteUseCase,
-    private val favoriteStateFactory: FavoriteStateFactory
 ) : ViewModel() {
 
     private var _state = MutableStateFlow(ProductsScreenState())
